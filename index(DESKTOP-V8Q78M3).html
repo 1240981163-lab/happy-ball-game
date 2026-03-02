@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- 移动端视口配置，禁止缩放，全屏体验 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="欢乐球球">
+  <meta name="theme-color" content="#1a1a2e">
+  <!-- PWA图标配置，支持添加到手机桌面 -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231a1a2e'/><circle cx='50' cy='50' r='25' fill='%23ffffff'/></svg>">
+  <title>欢乐球球</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 游戏主画布 -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD界面：分数与连击显示 -->
+  <div id="hud" class="hidden">
+    <div id="scoreDisplay">
+      <span class="label">得分</span>
+      <span id="currentScore">0</span>
+    </div>
+    <div id="comboDisplay">
+      <span class="label">连击</span>
+      <span id="currentCombo">0</span>
+    </div>
+    <div id="playerNameDisplay"></div>
+    <button id="pauseBtn" class="icon-btn">⏸</button>
+  </div>
+
+  <!-- 欢迎弹窗：难度选择 -->
+  <div id="welcomeModal" class="modal-overlay">
+    <div class="modal-box">
+      <h1 class="modal-title">你好呀。</h1>
+      <p class="modal-subtitle">你是否是欢乐球球的游戏高玩呢？</p>
+      <div class="modal-buttons">
+        <button class="btn btn-expert" id="btnExpert">
+          是，刘小姐你就是游戏高玩
+        </button>
+        <button class="btn btn-newbie" id="btnNewbie">
+          不是游戏高玩，只会玩一点点
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户名创建弹窗 -->
+  <div id="usernameModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h2 class="modal-title">创建你的昵称</h2>
+      <p class="modal-subtitle">给自己起个好听的名字吧～</p>
+      <input type="text" id="usernameInput" class="text-input" 
+             placeholder="请输入昵称（最多8个字）" maxlength="8" autocomplete="off">
+      <div id="usernameError" class="error-text hidden">昵称不能为空哦～</div>
+      <button class="btn btn-primary" id="btnConfirmUsername">开始游戏！</button>
+    </div>
+  </div>
+
+  <!-- 游戏结算弹窗 -->
+  <div id="gameOverModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <p id="gameOverTopText" class="gameover-top-text"></p>
+      <h2 class="modal-title">游戏结束</h2>
+      <div class="result-stats">
+        <div class="stat-item">
+          <span class="stat-label">本局得分</span>
+          <span class="stat-value" id="finalScore">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">历史最高</span>
+          <span class="stat-value highlight" id="highScore">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">最高连击</span>
+          <span class="stat-value" id="maxCombo">0</span>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-primary" id="btnRestart">再开一局</button>
+        <button class="btn btn-surrender hidden" id="btnSurrender">
+          我认输了，我确实不厉害，我是个萌新玩家
+        </button>
+        <button class="btn btn-secondary" id="btnShowRanking">查看排行榜</button>
+        <button class="btn btn-share" id="btnShare">分享成绩</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 排行榜弹窗 -->
+  <div id="rankingModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h2 class="modal-title">🏆 本地排行榜</h2>
+      <div id="rankingList" class="ranking-list"></div>
+      <div id="friendScores" class="friend-scores hidden">
+        <h3 class="sub-title">好友成绩</h3>
+        <div id="friendList"></div>
+      </div>
+      <button class="btn btn-secondary" id="btnCloseRanking">关闭</button>
+    </div>
+  </div>
+
+  <!-- 首页（回到游戏后显示） -->
+  <div id="homeScreen" class="modal-overlay hidden">
+    <div class="home-content">
+      <div class="game-logo">🎱</div>
+      <h1 class="game-title">欢乐球球</h1>
+      <p class="player-welcome" id="homeWelcome"></p>
+      <button class="btn btn-primary btn-large" id="btnStartGame">开始游戏</button>
+      <button class="btn btn-secondary" id="btnHomeRanking">排行榜</button>
+      <button class="btn btn-secondary" id="btnResetUser">切换用户</button>
+    </div>
+  </div>
+
+  <!-- 暂停弹窗 -->
+  <div id="pauseModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h2 class="modal-title">游戏暂停</h2>
+      <div class="modal-buttons">
+        <button class="btn btn-primary" id="btnResume">继续游戏</button>
+        <button class="btn btn-secondary" id="btnQuit">退出本局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
